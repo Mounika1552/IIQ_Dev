@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Active Directory Before Provisioninig Rule" type="BeforeProvisioning">
+          
+    
+    <Description>An IdentityIQ server-side rule that is executed before the connector's provisioning method is called. This gives the customer the ability to customize or react to anything in the ProvisioningPlan BEFORE it is sent to the underlying connectors used in provisioning. 
+
+This rule will be called for any application found in a plan that also has a configured 'beforeProvisioningRule' configured.  
+
+The plan can be updated directly in the rule by reference and does not need to return the plan.</Description>
+          
+    
+    <Signature>
+                    
+        
+        <Inputs>
+                              
+            
+            <Argument name="log" type="org.apache.commons.logging.Log">
+                                        
+                
+                <Description>
+          The log object associated with the SailPointContext.
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="context" type="sailpoint.api.SailPointContext">
+                                        
+                
+                <Description>
+          A sailpoint.api.SailPointContext object that can be used to query the database if necessary.
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="plan">
+                                        
+                
+                <Description>
+          The ProvisioningPlan object on its way to the Connector.
+        </Description>
+                                      
+            
+            </Argument>
+                              
+            
+            <Argument name="application">
+                                        
+                
+                <Description>
+          The application object that references this before/after script.
+        </Description>
+                                      
+            
+            </Argument>
+                            
+        
+        </Inputs>
+                  
+    
+    </Signature>
+          
+    
+    <Source><![CDATA[import sailpoint.object.*;
+import sailpoint.object.ProvisioningPlan.AccountRequest;
+import sailpoint.object.ProvisioningPlan.AttributeRequest;
+Identity identity = plan.getIdentity();
+String samaccountName = identity.getFirstname().substring(0,1)+ identity.getLastname();
+String distinguishedName = "CN="+ identity.getFirstname()+ identity.getLastname()+",OU=People,OU=Demo,DC=Eshiam,DC=com";
+Application app = context.getObjectByName(Identity.class,"AD Target");
+if(identity!=null && app !=null){
+Link link = identity.getLink();
+if(link!=null){
+street =  link.getAttribute("AddressLine");
+}
+}
+String email = samaccountName + "@gmail.com";
+String fname = identity.getFirstname();
+String lname = identity.getLastname();
+String userPrincipalName = identity.getAttribute("userPrincipalName");
+String street;
+List accountRequests = plan.getAccountRequests();
+for(int i=0; i<accountRequests.size();i++){
+AccountRequest accountRequest = accountRequests.get(i);
+ProvisioningPlan.AccountRequest.Operation op = accountRequest.getOperation();
+if(op!=null && accountRequest.getOperation().equals(AccountRequest.Operation.Create)){
+accountRequest.setNativeIdentity(distinguishedName);
+accountRequest.add(new AttributeRequest("email",ProvisioningPlan.Operation.Add,email));
+accountRequest.add(new AttributeRequest("samaccountName",ProvisioningPlan.Operation.Add,samaccountName));
+accountRequest.add(new AttributeRequest("password",ProvisioningPlan.Operation.Add,"Admin@123"));
+accountRequest.add(new AttributeRequest("pwdLastSet",ProvisioningPlan.Operation.Add,"TRUE"));
+accountRequest.add(new AttributeRequest("IIQDisabled",ProvisioningPlan.Operation.Add,"TRUE"));
+accountRequest.add(new AttributeRequest("primaryGroupDN",ProvisioningPlan.Operation.Add,""));
+accountRequest.add(new AttributeRequest("userPrincipalName",ProvisioningPlan.Operation.Add,userPrincipalName));
+accountRequest.add(new AttributeRequest("userAccountControl",ProvisioningPlan.Operation.Add,"514"));
+accountRequest.add(new AttributeRequest("givenName",ProvisioningPlan.Operation.Add,fname));
+accountRequest.add(new AttributeRequest("sn",ProvisioningPlan.Operation.Add,lname));
+accountRequest.add(new AttributeRequest("description",ProvisioningPlan.Operation.Add,"ProvisioningPolicyForm"));
+accountRequest.add(new AttributeRequest("street",ProvisioningPlan.Operation.Add,street));
+accountRequest.add(new AttributeRequest("City",ProvisioningPlan.Operation.Add,"true"));
+accountRequest.add(new AttributeRequest("State",ProvisioningPlan.Operation.Add,"true"));
+accountRequest.add(new AttributeRequest("Zip",ProvisioningPlan.Operation.Add,"true"));
+accountRequest.add(new AttributeRequest("Country",ProvisioningPlan.Operation.Add,"true"));
+System.out.println("Plan is "+plan.toXml());
+return plan;
+
+ }
+}]]></Source>
+        
+
+</Rule>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="Ad hoc Prune Request Objects Rule" type="Validation">
+          
+    
+    <Description>
+    This rule populates a form with fields for all searchable account fields.
+  </Description>
+          
+    
+    <Source><![CDATA[
+  import sailpoint.object.QueryOptions;
+  import sailpoint.object.Filter;
+  import sailpoint.api.Terminator;
+  import sailpoint.object.Request;
+  import sailpoint.tools.Util;
+  
+  {
+    String specifiedDate = config.get("specifiedDate");
+
+    if (specifiedDate == null) {
+      taskResult.addMessage("The specifiedDate IS NULL, Enter the date and try again");
+      return "Success";
+    }
+
+    Filter filter = Filter.le("created", Util.getEndOfDay(Util.stringToDate(specifiedDate)));
+    QueryOptions options = new QueryOptions();
+    options.setCloneResults(true);
+    options.addFilter(filter);
+    taskResult.addMessage("The Request Objects Count With Created  Date Less than " +specifiedDate+ " : " +context.countObjects(Request.class,options));
+    Terminator terminator = new Terminator(context);
+    terminator.deleteObjects(Request.class,options);
+    return "Success";	
+  }
+  ]]></Source>
+        
+
+</Rule>
