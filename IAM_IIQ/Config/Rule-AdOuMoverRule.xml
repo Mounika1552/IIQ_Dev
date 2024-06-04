@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="AD OU Mover Rule" type="Validation">
+          
+    
+    <Source><![CDATA[
+  import sailpoint.object.*;
+  import sailpoint.object.ProvisioningPlan.*;
+  import sailpoint.integration.ProvisioningPlan.*;
+  import sailpoint.object.ProvisioningPlan.AccountRequest;
+  import sailpoint.object.ProvisioningPlan.AttributeRequest;
+  import sailpoint.api.Provisioner;
+
+  //log.error("Email in ProvisioningPlan is =====  " +Email);
+  //log.error("identity Name in plan is =====  " +launcher);
+  Identity iden = context.getObjectByName(Identity.class,"Jennifer Thomas");
+  // for(Identity id : iden){
+  String idName = iden.getName();
+  log.error("idName is **************" + idName);
+  String destinationOU = "OU=Employees,OU=Users,OU=Disabled,OU=Demo,DC=Eshiam,DC=com";
+  String distinguishedName = "CN="+idName+",OU=People,OU=Demo,DC=Eshiam,DC=com";
+  //Application app = context.getObjectByName(Application.class,"AD Target");
+  ProvisioningPlan plan = new ProvisioningPlan();
+
+  AccountRequest accountRequest = new AccountRequest();
+  accountRequest.setNativeIdentity(distinguishedName);
+  accountRequest.setApplication("AD Target");
+  accountRequest.setOperation(AccountRequest.Operation.Modify);
+  // accountRequest.add(new AttributeRequest("mail",ProvisioningPlan.Operation.Add,Email));
+   accountRequest.add(new AttributeRequest("userAccountControl",ProvisioningPlan.Operation.Add,"514"));
+  accountRequest.add(new AttributeRequest("AC_NewParent",ProvisioningPlan.Operation.Add,destinationOU));
+  plan.add(accountRequest);
+
+  log.error("identityName is ============= " +idName);
+
+  plan.setIdentity(context.getObjectByName(Identity.class,"Jennifer Thomas"));
+  Provisioner p = new Provisioner(context);
+  p.execute(plan);
+
+  log.error("plan is ================="+plan.toXml());
+  return plan;
+
+
+  ]]></Source>
+        
+
+</Rule>
