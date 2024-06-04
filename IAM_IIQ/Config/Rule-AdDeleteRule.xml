@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE Rule PUBLIC "sailpoint.dtd" "sailpoint.dtd">
+<Rule language="beanshell" name="AD Delete Rule">
+          
+    
+    <Source><![CDATA[
+  import sailpoint.object.*;
+  import sailpoint.api.*;
+  import sailpoint.object.ProvisioningPlan;
+  import sailpoint.object.ProvisioningPlan.AccountRequest;
+  import sailpoint.object.ProvisioningPlan.AttributeRequest;
+  import sailpoint.api.Provisioner;
+  import sailpoint.object.IdentityChangeEvent;
+
+  String identityFullname = "Alan Bradley";
+  String dn = "CN = "+ identityFullname +",OU=People,OU=Demo,DC=Eshiam,DC=com";
+
+  ProvisioningPlan plan = new ProvisioningPlan();
+  Identity identity = context.getObjectByName(Identity.class,identityFullname);
+
+  AccountRequest accountRequest = new AccountRequest();
+  accountRequest.setOp(ProvisioningPlan.ObjectOperation.Delete);
+  accountRequest.setApplication("AD Target");
+  accountRequest.setNativeIdentity(dn);
+  // accountRequest.add(new AttributrRequest("manager",ProvisioningPlan.Operation.Set,newManagerValue);
+  plan.add(accountRequest);
+  plan.setIdentity(identity);
+  
+  Provisioner provisioner = new Provisioner(context);
+  provisioner.execute(plan);
+
+  System.out.println("Plan:::: " + plan.toXml());  
+  return plan;
+  ]]></Source>
+        
+
+</Rule>
